@@ -46,11 +46,13 @@ Enter wizard mode to cast magical spells:
 wizard
 ```
 
-Available spells:
-- `lumos` - Creates a magical light (clears the screen)
-- `alohomora <file/directory>` - Opens files or directories
-- `accio <pattern>` - Fetches files matching a pattern
-- `wingardium <text>` - Levitates text on the screen
+Available spells (with aliases in parentheses):
+- `illuminatus_perpetuum` (`light`) - Creates a magical light that looks rather surprised about its own existence
+- `opendoorus_immedius` (`open`) - Opens files or directories, assuming they're not feeling particularly stubborn
+- `fetchum_fileium` (`fetch`) - Summons files from the mysterious ether of the filesystem
+- `antigravitonia_selectivus` (`float`) - Elevates text in defiance of gravity's objections
+
+> *Note: Spells were documented by wizards from the Unseen University's Faculty of Unnecessarily Complicated Nomenclature.*
 
 To exit wizard mode:
 
@@ -81,7 +83,8 @@ You can add your own spells by modifying the `spells/wizard.py` file:
 
 1. Add your spell to the `spells` dictionary in the `Wizard` class
 2. Create a new method to handle your spell's functionality
-3. Restart Magic Shell to use your new spell
+3. Consider adding aliases for ease of use (wizards are notoriously busy people)
+4. Restart Magic Shell to use your new spell
 
 ## 🔮 Contributing
 
@@ -100,6 +103,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🧙‍♀️ Acknowledgments
 
 - The ASCII art wizards, books, and crystal balls that make our shell magical
+- Terry Pratchett, whose Discworld series inspired our magical style
 - Everyone who believes in the power of command-line magic
 
 ---

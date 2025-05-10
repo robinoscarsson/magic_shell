@@ -29,7 +29,17 @@ class Shell:
         """Configure tab completion for the shell."""
         # Define list of base commands for completion
         self.base_commands = [
-            "exit", "quit", "help", "cd", "history", "wizard", "normal"
+            "exit",
+            "quit",
+            "help",
+            "cd", 
+            "history",
+            "wizard",
+            "normal",
+            "illuminatus_perpetuum",
+            "opendoorus_immedius",
+            "fetchum_fileium",
+            "antigravitonia_selectivus",
         ]
         
         # Register our completer function
