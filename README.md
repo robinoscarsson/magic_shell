@@ -14,7 +14,7 @@ A whimsical command-line shell with magical powers! Magic Shell enhances your te
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/magic_shell.git
+   git clone https://github.com/robinoscarsson/magic_shell.git
    cd magic_shell
    ```
 
@@ -95,10 +95,6 @@ Contributions are welcome! To contribute:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## 📜 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🧙‍♀️ Acknowledgments
 
