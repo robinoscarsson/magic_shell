@@ -43,7 +43,9 @@ class PTYBridge:
         self.exit_code: int = 0
         
         # Event callbacks for command timing
-        self.event_callbacks: List[Callable[[str], None]] = []
+        self.event_callbacks: List[Callable[[dict], None]] = []
+        self._current_command = ""
+        self._command_start_time = 0
         
         # Hook injection support
         self.hooks_injected = False
@@ -177,7 +179,7 @@ class PTYBridge:
                     
                     # Trigger event callbacks for detected timing events
                     for event in events:
-                        self._trigger_event(event)
+                        self._trigger_enhanced_event(event)
                     
                     # Forward cleaned data (without markers) to stdout
                     if cleaned_data:
@@ -257,25 +259,55 @@ class PTYBridge:
                 except OSError:
                     pass
     
-    def add_event_callback(self, callback: Callable[[str], None]) -> None:
+    def add_event_callback(self, callback: Callable[[dict], None]) -> None:
         """
         Add a callback for shell timing events.
         
         Args:
-            callback: Function to call with event name
+            callback: Function to call with event dict (type, command, exit_code, etc.)
         """
         self.event_callbacks.append(callback)
     
-    def _trigger_event(self, event_name: str) -> None:
+    def _trigger_enhanced_event(self, event_data: dict) -> None:
         """
-        Trigger all registered event callbacks.
+        Trigger enhanced event callbacks with command tracking.
         
         Args:
-            event_name: Name of the event (command_start, command_end, etc.)
+            event_data: Event data from OSC marker parsing
         """
+        import time
+        
+        event_type = event_data.get("type", "")
+        
+        # Enhanced event with command tracking
+        enhanced_event = {
+            "type": event_type,
+            "timestamp": time.time(),
+            "command": self._current_command,
+            "exit_code": 0  # Will be updated on command_end
+        }
+        
+        if event_type == "A":  # Command start
+            enhanced_event["type"] = "command_start"
+            # Try to extract command from recent input (simplified for PR 4)
+            self._current_command = "command"  # Placeholder - actual command extraction complex
+            self._command_start_time = enhanced_event["timestamp"]
+            
+        elif event_type == "B":  # Command end  
+            enhanced_event["type"] = "command_end"
+            enhanced_event["duration"] = enhanced_event["timestamp"] - self._command_start_time
+            # Exit code extraction would require shell-specific parsing (future enhancement)
+            
+        elif event_type == "P":  # Prompt start
+            enhanced_event["type"] = "prompt_start"
+            
+        elif event_type == "Q":  # Prompt end
+            enhanced_event["type"] = "prompt_end"
+            
+        # Trigger callbacks
         for callback in self.event_callbacks:
             try:
-                callback(event_name)
+                callback(enhanced_event)
             except Exception:
                 # Don't let callback errors break the PTY bridge
                 pass

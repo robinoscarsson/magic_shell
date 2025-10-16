@@ -31,7 +31,7 @@ def test_main_help_flag():
         ], capture_output=True, text=True)
         
         assert result.returncode == 0
-        assert "0.3.0" in result.stdout
+        assert "0.4.0" in result.stdout
 def test_main_basic_run():
     """Test that main function runs with PTY bridge."""
     # Note: This test may timeout in CI since it launches a real shell

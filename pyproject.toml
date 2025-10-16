@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "magic-shell"
-version = "0.1.0"
+version = "0.4.0"
 description = "A magical wrapper around your real shell - cosmetic effects with zero interference"
 authors = [
     {name = "Magic Shell Contributors"}
@@ -31,6 +31,8 @@ keywords = ["shell", "terminal", "pty", "wrapper", "magic", "effects"]
 dependencies = [
     "prompt-toolkit>=3.0.0",
     "rich>=13.0.0",
+    "tomli>=2.0.0; python_version<'3.11'",
+    "tomli-w>=1.0.0",
 ]
 
 [project.optional-dependencies]

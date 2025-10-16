@@ -263,7 +263,7 @@ class TestMainIntegrationPR3:
     """Integration tests for main entry point with hooks - PR 3."""
     
     def test_main_version_updated(self):
-        """Test that version is updated to v0.3.0 for PR 3."""
+        """Test that version is updated to v0.4.0 for PR 4."""
         import subprocess
         import sys
         
@@ -272,7 +272,7 @@ class TestMainIntegrationPR3:
         ], capture_output=True, text=True)
         
         assert result.returncode == 0
-        assert "0.3.0" in result.stdout
+        assert "0.4.0" in result.stdout
     
     def test_main_with_theme_flags(self):
         """Test main with theme-related flags.""" 

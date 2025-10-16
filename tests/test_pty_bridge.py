@@ -133,7 +133,7 @@ class TestMainIntegration:
         assert "magical wrapper" in result.stdout.lower()
     
     def test_main_version_updated(self):
-        """Test that version is updated to v0.3.0 for PR 3."""
+        """Test that version is updated to v0.4.0 for PR 4."""
         import subprocess
         import sys
         
@@ -142,7 +142,7 @@ class TestMainIntegration:
         ], capture_output=True, text=True)
         
         assert result.returncode == 0
-        assert "0.3.0" in result.stdout
+        assert "0.4.0" in result.stdout
     
     def test_main_shell_detection_error(self):
         """Test main handles shell detection errors gracefully."""
