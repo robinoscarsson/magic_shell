@@ -5,42 +5,44 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "magic-shell"
 version = "0.1.0"
-description = "A magical command-line shell with enhanced features and whimsical spells"
+description = "A magical wrapper around your real shell - cosmetic effects with zero interference"
 authors = [
-    {name = "Robin Oscarsson", email = "robin@example.com"}
+    {name = "Magic Shell Contributors"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Console",
     "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: System :: Shells",
-    "Topic :: Utilities",
+    "Topic :: Terminals",
+    "Topic :: Utilities"
 ]
-keywords = ["shell", "cli", "repl", "magic", "terminal"]
+keywords = ["shell", "terminal", "pty", "wrapper", "magic", "effects"]
 dependencies = [
     "prompt-toolkit>=3.0.0",
-    "rich>=10.0.0",
-    "tomli>=1.2.0; python_version<'3.11'",  # tomllib is built-in from Python 3.11+
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=6.0",
+    "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "ruff>=0.1.0", 
-    "black>=22.0",
-    "mypy>=1.0",
-    "pre-commit>=3.0.0",
+    "ruff>=0.1.0",
+    "pexpect>=4.8.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pexpect>=4.8.0",
 ]
 
 [project.urls]
@@ -56,42 +58,42 @@ where = ["."]
 include = ["magic_shell*"]
 
 [tool.ruff]
-target-version = "py38"
 line-length = 100
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "UP", # pyupgrade
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings  
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "S",   # flake8-bandit (security)
 ]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
+    "E501",  # line too long, handled by formatter
+    "S101",  # assert statements (OK in tests)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-
-[tool.black]
-target-version = ['py38']
-include = '\.pyi?$'
-line-length = 100
-
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
+"tests/**" = ["S101", "S602", "S603", "S607"]  # Allow test-specific patterns
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = [
-    "tests",
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests requiring external binaries",
+    "pty: marks tests requiring PTY functionality (Unix only)"
 ]
