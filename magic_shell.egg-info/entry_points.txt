@@ -1,0 +1,2 @@
+[console_scripts]
+magic-shell = magic_shell.main:main

@@ -1,7 +1,7 @@
 import random
 import time
 import os
-from utils.colors import COLORS as colors
+from .colors import COLORS as colors
 
 def print_welcome():
     """Display a magical welcome screen."""

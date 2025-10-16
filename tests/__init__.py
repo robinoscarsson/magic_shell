@@ -1,0 +1,1 @@
+"""Test configuration for Magic Shell tests."""

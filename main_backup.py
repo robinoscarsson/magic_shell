@@ -6,7 +6,7 @@ This is the main entry point for the Magic Shell application.
 """
 
 import sys
-from core.shell import Shell
+from .core.shell import Shell
 
 def main() -> int:
     """
