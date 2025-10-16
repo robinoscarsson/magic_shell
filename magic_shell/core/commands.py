@@ -1,7 +1,7 @@
 """Command handling for the Magic Shell."""
 
 import os
-from typing import Dict, Callable, Any
+from typing import Callable
 
 from .registry import command, registry
 from .executor import safe_executor

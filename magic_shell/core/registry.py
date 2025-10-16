@@ -1,7 +1,6 @@
 """Command registry system for Magic Shell."""
 
 import inspect
-import os
 import importlib
 import pkgutil
 from typing import Dict, Callable, List, Optional, Any
@@ -220,7 +219,7 @@ class CommandRegistry:
                             for alias in cmd_info.aliases:
                                 self.commands[alias] = cmd_info
                                 
-                except ImportError as e:
+                except ImportError:
                     # Skip modules that can't be imported
                     continue
                     

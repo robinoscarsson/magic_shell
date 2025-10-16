@@ -31,7 +31,7 @@ def get_prompt() -> str:
         )
         
         return prompt
-    except Exception as e:
+    except Exception:
         # Fallback prompt if something goes wrong
         traceback.print_exc()
         return "> "

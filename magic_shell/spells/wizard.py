@@ -1,7 +1,6 @@
 """Wizard mode functionality for the Magic Shell."""
 
 import os
-import random
 import time
 from ..utils.colors import COLORS as colors
 from ..core.registry import command

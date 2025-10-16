@@ -2,13 +2,11 @@
 
 import os
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
 
 from ..utils.welcome import print_welcome
 from ..utils.prompt import get_prompt_text
 from .commands import CommandManager
-from .registry import registry
 from .history import History
 from .config import config_manager
 from .executor import safe_executor

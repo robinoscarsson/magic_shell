@@ -52,7 +52,6 @@ def spell_fortune():
          category="System")
 def enhanced_ls(*args):
     """Enhanced ls command with magical flair.""" 
-    import os
     import subprocess
     
     # Build ls command with arguments

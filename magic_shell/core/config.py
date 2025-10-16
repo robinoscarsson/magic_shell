@@ -4,8 +4,8 @@ import os
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict
+from typing import Dict, List
+from dataclasses import dataclass
 
 # Handle TOML parsing for different Python versions
 if sys.version_info >= (3, 11):

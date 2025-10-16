@@ -3,9 +3,7 @@
 import os
 import shlex
 import subprocess
-import signal
 from typing import List, Optional, Dict, Any, Tuple
-from pathlib import Path
 import logging
 
 from ..utils.colors import COLORS as colors
