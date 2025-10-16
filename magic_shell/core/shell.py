@@ -10,6 +10,8 @@ from ..utils.prompt import get_prompt_text
 from .commands import CommandManager
 from .registry import registry
 from .history import History
+from .config import config_manager
+from .executor import safe_executor
 from ..spells.wizard import Wizard
 
 
@@ -18,18 +20,40 @@ class Shell:
     
     def __init__(self):
         """Initialize the shell."""
-        self.state = {"wizard_mode": False, "running": True}
+        # Load configuration first
+        self.config = config_manager.load_config()
+        
+        # Initialize state (may be overridden by config)
+        self.state = {
+            "wizard_mode": self.config.shell.wizard_mode_startup,
+            "running": True
+        }
+        
+        # Configure safe executor with loaded config
+        safe_executor.config = {
+            'allowed_commands': self.config.executor.allowed_commands,
+            'default_timeout': self.config.executor.default_timeout,
+            'max_output_size': self.config.executor.max_output_size,
+            'additional_env_vars': self.config.executor.additional_env_vars,
+            'working_directory': self.config.executor.working_directory
+        }
+        safe_executor.whitelist = set(self.config.executor.allowed_commands)
+        
+        # Initialize components
         self.history = History()
         self.commands = CommandManager(self.state)
         self.wizard = Wizard()
         
-        # Simple prompt session
-        history_file = os.path.expanduser("~/.magic_shell_history")
-        self.session = PromptSession(history=FileHistory(history_file))
+        # Setup prompt session with configuration
+        history_file = os.path.expanduser(self.config.shell.history_file)
+        self.session = PromptSession(
+            history=FileHistory(history_file) if self.config.shell.enable_history else None
+        )
         
     def run(self) -> int:
         """Run the shell main loop."""
-        print_welcome()
+        if self.config.shell.show_welcome:
+            print_welcome()
         
         while self.state["running"]:
             try:

@@ -30,6 +30,7 @@ keywords = ["shell", "cli", "repl", "magic", "terminal"]
 dependencies = [
     "prompt-toolkit>=3.0.0",
     "rich>=10.0.0",
+    "tomli>=1.2.0; python_version<'3.11'",  # tomllib is built-in from Python 3.11+
 ]
 
 [project.optional-dependencies]

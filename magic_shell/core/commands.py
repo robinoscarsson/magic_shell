@@ -4,6 +4,8 @@ import os
 from typing import Dict, Callable, Any
 
 from .registry import command, registry
+from .executor import safe_executor
+from .config import config_manager
 from ..utils.colors import COLORS as colors
 
 CommandHandler = Callable[[str], None]
@@ -40,7 +42,16 @@ def exit_wizard_mode(state: dict):
 @command(":reload", "Reload shell configuration", category="System")
 def reload_config():
     """Reload shell configuration."""
-    print(f"{colors['blue']}🔄 Reloading configuration... (feature coming soon!){colors['end']}")
+    config = config_manager.reload_config()
+    # Update safe executor with new config
+    safe_executor.config = {
+        'allowed_commands': config.executor.allowed_commands,
+        'default_timeout': config.executor.default_timeout,
+        'max_output_size': config.executor.max_output_size,
+        'additional_env_vars': config.executor.additional_env_vars,
+        'working_directory': config.executor.working_directory
+    }
+    safe_executor.whitelist = set(config.executor.allowed_commands)
 
 
 @command("cd", "Change directory", category="System")
@@ -56,6 +67,92 @@ def change_directory(path: str = "~"):
         print(f"{colors['red']}cd: permission denied: {path}{colors['end']}")
     except Exception as e:
         print(f"{colors['red']}cd: error: {e}{colors['end']}")
+
+
+@command("config", "Show or edit configuration settings", category="System")
+def show_config(*args):
+    """Show configuration information or edit settings."""
+    if not args:
+        # Show current configuration
+        config = config_manager.get_config()
+        print(f"{colors['cyan']}=== 🔧 Magic Shell Configuration ==={colors['end']}")
+        print(f"{colors['yellow']}Config file:{colors['end']} {config_manager.config_file}")
+        print(f"{colors['yellow']}Version:{colors['end']} {config.version}")
+        print()
+        print(f"{colors['cyan']}Shell Settings:{colors['end']}")
+        print(f"  Wizard mode on startup: {config.shell.wizard_mode_startup}")
+        print(f"  Show welcome: {config.shell.show_welcome}")
+        print(f"  History enabled: {config.shell.enable_history}")
+        print(f"  History file: {config.shell.history_file}")
+        print(f"  Auto-complete: {config.shell.auto_complete}")
+        print()
+        print(f"{colors['cyan']}Execution Settings:{colors['end']}")
+        print(f"  Default timeout: {config.executor.default_timeout}s")
+        print(f"  Max output size: {config.executor.max_output_size // 1024}KB")
+        print(f"  Allowed commands: {len(config.executor.allowed_commands)} commands")
+        print(f"  Working directory: {config.executor.working_directory}")
+        
+    elif args[0] == "edit":
+        # Open config file in editor
+        config_file = str(config_manager.config_file)
+        editor = os.environ.get('EDITOR', 'nano')
+        print(f"{colors['blue']}📝 Opening config in {editor}...{colors['end']}")
+        safe_executor.execute_with_feedback(f"{editor} {config_file}")
+        
+    elif args[0] == "path":
+        # Show config file path
+        print(f"{colors['green']}Config file: {config_manager.config_file}{colors['end']}")
+
+
+@command("allowed", "Show or manage allowed commands", category="System")
+def manage_allowed_commands(*args):
+    """Show or manage the allowed commands list."""
+    if not args:
+        # Show allowed commands
+        allowed = safe_executor.list_allowed_commands()
+        print(f"{colors['cyan']}=== 🛡️  Allowed Commands ({len(allowed)}) ==={colors['end']}")
+        
+        # Group commands for better display
+        per_line = 6
+        for i in range(0, len(allowed), per_line):
+            line_commands = allowed[i:i + per_line]
+            formatted = [f"{colors['yellow']}{cmd:12}{colors['end']}" for cmd in line_commands]
+            print("  " + " ".join(formatted))
+        
+        print()
+        print(f"{colors['green']}Use 'allowed add <command>' to add new commands{colors['end']}")
+        print(f"{colors['green']}Use 'allowed remove <command>' to remove commands{colors['end']}")
+        
+    elif len(args) >= 2 and args[0] == "add":
+        # Add commands to whitelist
+        new_commands = list(args[1:])
+        safe_executor.add_to_whitelist(new_commands)
+        config_manager.add_allowed_commands(new_commands)
+        print(f"{colors['green']}✅ Added commands to allowed list: {new_commands}{colors['end']}")
+        
+    elif len(args) >= 2 and args[0] == "remove":
+        # Remove commands from whitelist
+        remove_commands = list(args[1:])
+        safe_executor.remove_from_whitelist(remove_commands)
+        # Update config
+        current = set(config_manager.config.executor.allowed_commands)
+        current.difference_update(remove_commands)
+        config_manager.config.executor.allowed_commands = list(current)
+        print(f"{colors['yellow']}🗑️  Removed commands from allowed list: {remove_commands}{colors['end']}")
+        
+    else:
+        print(f"{colors['red']}Usage: allowed [add|remove] <command1> [command2...]{colors['end']}")
+
+
+@command("safe", "Execute command with safety checks", category="System")
+def safe_execute(*args):
+    """Execute a command using the safe executor."""
+    if not args:
+        print(f"{colors['red']}Usage: safe <command> [args...]{colors['end']}")
+        return
+        
+    command_str = " ".join(args)
+    return safe_executor.execute_with_feedback(command_str)
 
 class CommandManager:
     """Manages command execution using the command registry."""
@@ -133,7 +230,7 @@ class CommandManager:
 
     def execute_command(self, command: str) -> int:
         """
-        Execute a system command safely.
+        Execute a system command safely using the safe executor.
         
         Args:
             command: The command to execute
@@ -141,4 +238,4 @@ class CommandManager:
         Returns:
             int: Command exit code
         """
-        return os.system(command)
+        return safe_executor.execute_with_feedback(command)
