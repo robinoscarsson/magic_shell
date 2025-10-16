@@ -132,14 +132,17 @@ class TestMainIntegration:
         assert result.returncode == 0
         assert "magical wrapper" in result.stdout.lower()
     
-    def test_main_with_pty_version(self):
-        """Test version shows v0.2.0 for PR 2."""
+    def test_main_version_updated(self):
+        """Test that version is updated to v0.3.0 for PR 3."""
+        import subprocess
+        import sys
+        
         result = subprocess.run([
             sys.executable, "-m", "magic_shell.main", "--version"
         ], capture_output=True, text=True)
         
         assert result.returncode == 0
-        assert "0.2.0" in result.stdout
+        assert "0.3.0" in result.stdout
     
     def test_main_shell_detection_error(self):
         """Test main handles shell detection errors gracefully."""

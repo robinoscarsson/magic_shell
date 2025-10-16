@@ -10,6 +10,25 @@ from pathlib import Path
 
 from .core.bridge import PTYBridge
 from .core.shell_detect import get_shell_with_fallback, get_shell_name
+from .core.theme import create_theme, MagicTheme
+
+
+def _handle_timing_event(theme: MagicTheme, event: str) -> None:
+    """
+    Handle shell timing events by calling appropriate theme methods.
+    
+    Args:
+        theme: Theme instance
+        event: Event name (command_start, command_end, prompt_start, prompt_end)
+    """
+    if event == "command_start":
+        theme.on_command_start()
+    elif event == "command_end":
+        theme.on_command_end()  # TODO: Get actual exit code in PR 4
+    elif event == "prompt_start":
+        theme.on_prompt_start()
+    elif event == "prompt_end":
+        theme.on_prompt_end()
 
 
 def main() -> int:
@@ -43,7 +62,7 @@ def main() -> int:
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.2.0",
+        version="%(prog)s 0.3.0",
     )
     
     args = parser.parse_args()
@@ -53,15 +72,23 @@ def main() -> int:
         shell_path = get_shell_with_fallback(args.shell)
         shell_name = get_shell_name(shell_path)
         
-        # Show startup info (brief, non-intrusive)
+        # Create theme (effects disabled if --plain)
+        theme_name = "plain" if args.plain else (args.theme or "veil")
+        theme = create_theme(theme_name)
+        
+        # Show startup banner if effects enabled
         if not args.plain:
-            print(f"🪄 Magic Shell v0.2.0 - Wrapping {shell_name}")
+            theme.show_startup_banner()
+            print(f"Wrapping {shell_name} with precise command timing")
             
-        # Create and run PTY bridge
+        # Create PTY bridge
         bridge = PTYBridge(
             shell_path=shell_path,
             stage_mode=args.stage
         )
+        
+        # Connect theme to bridge events for future effects (PR 4)
+        bridge.add_event_callback(lambda event: _handle_timing_event(theme, event))
         
         # Run the bridge (this blocks until shell exits)
         exit_code = asyncio.run(bridge.run())

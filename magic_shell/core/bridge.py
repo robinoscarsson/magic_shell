@@ -8,9 +8,10 @@ import struct
 import sys
 import termios
 import tty
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Callable
 
-from .shell_detect import get_shell_with_fallback
+from .shell_detect import get_shell_with_fallback, get_shell_name
+from .hooks import shell_hooks
 
 
 class PTYBridge:
@@ -34,11 +35,18 @@ class PTYBridge:
             stage_mode: Enable experimental features
         """
         self.shell_path = get_shell_with_fallback(shell_path)
+        self.shell_name = get_shell_name(self.shell_path)
         self.stage_mode = stage_mode
         self.master_fd: Optional[int] = None
         self.child_pid: Optional[int] = None
         self.original_termios: Optional[list] = None
         self.exit_code: int = 0
+        
+        # Event callbacks for command timing
+        self.event_callbacks: List[Callable[[str], None]] = []
+        
+        # Hook injection support
+        self.hooks_injected = False
         
     def _setup_terminal(self) -> None:
         """Setup terminal for raw mode."""
@@ -109,8 +117,20 @@ class PTYBridge:
                 except (OSError, struct.error):
                     pass
                 
-                # Execute shell
-                os.execv(self.shell_path, [self.shell_path])
+                # Execute shell with hook injection
+                shell_args = [self.shell_path]
+                
+                # Add hook injection for supported shells
+                if shell_hooks.is_supported_shell(self.shell_name):
+                    # Create initialization script for hooks
+                    hook_commands = shell_hooks.inject_hooks(self.shell_name)
+                    if hook_commands:
+                        # For bash/zsh, use -c to execute init commands then interactive mode
+                        if self.shell_name in ["bash", "zsh"]:
+                            init_script = f"{hook_commands}; exec {self.shell_path}"
+                            shell_args = [self.shell_path, "-c", init_script]
+                
+                os.execv(self.shell_path, shell_args)
                 
             else:
                 # Parent process - manage PTY
@@ -140,7 +160,7 @@ class PTYBridge:
                 break
     
     async def _forward_output(self) -> None:
-        """Forward output from shell to stdout (async)."""
+        """Forward output from shell to stdout, parsing OSC markers (async)."""
         loop = asyncio.get_event_loop()
         
         while True:
@@ -151,9 +171,17 @@ class PTYBridge:
                     
                     if not data:
                         break
-                        
-                    # Forward to stdout
-                    os.write(sys.stdout.fileno(), data)
+                    
+                    # Parse OSC markers and extract events
+                    cleaned_data, events = shell_hooks.parse_osc_markers(data)
+                    
+                    # Trigger event callbacks for detected timing events
+                    for event in events:
+                        self._trigger_event(event)
+                    
+                    # Forward cleaned data (without markers) to stdout
+                    if cleaned_data:
+                        os.write(sys.stdout.fileno(), cleaned_data)
                     
             except OSError:
                 break
@@ -229,6 +257,29 @@ class PTYBridge:
                 except OSError:
                     pass
     
+    def add_event_callback(self, callback: Callable[[str], None]) -> None:
+        """
+        Add a callback for shell timing events.
+        
+        Args:
+            callback: Function to call with event name
+        """
+        self.event_callbacks.append(callback)
+    
+    def _trigger_event(self, event_name: str) -> None:
+        """
+        Trigger all registered event callbacks.
+        
+        Args:
+            event_name: Name of the event (command_start, command_end, etc.)
+        """
+        for callback in self.event_callbacks:
+            try:
+                callback(event_name)
+            except Exception:
+                # Don't let callback errors break the PTY bridge
+                pass
+    
     def get_shell_info(self) -> dict:
         """
         Get information about the shell being wrapped.
@@ -236,10 +287,9 @@ class PTYBridge:
         Returns:
             dict: Shell information
         """
-        from .shell_detect import get_shell_name
-        
         return {
             "path": self.shell_path,
-            "name": get_shell_name(self.shell_path),
+            "name": self.shell_name,
             "stage_mode": self.stage_mode,
+            "hooks_supported": shell_hooks.is_supported_shell(self.shell_name),
         }
